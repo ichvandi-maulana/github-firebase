@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "480995055395",
+    "project_id": "gitlab-firebase-aecce",
+    "storage_bucket": "gitlab-firebase-aecce.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480995055395:android:4e8af7efee668f2d5f9e96",
+        "android_client_info": {
+          "package_name": "com.example.gitlabfirebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480995055395-et58ieo9ou5s065iosdt4iofgkit067r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG5C50kZWVMpbMRU7fxA3Cl1IkmCdv4c8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480995055395-et58ieo9ou5s065iosdt4iofgkit067r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480995055395:android:ff1b523e8addf5725f9e96",
+        "android_client_info": {
+          "package_name": "com.example.gitlabfirebase.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480995055395-et58ieo9ou5s065iosdt4iofgkit067r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG5C50kZWVMpbMRU7fxA3Cl1IkmCdv4c8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480995055395-et58ieo9ou5s065iosdt4iofgkit067r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
