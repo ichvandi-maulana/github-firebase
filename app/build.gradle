@@ -18,15 +18,10 @@ android {
     }
 
     buildTypes {
-        debug {
-            buildConfigField 'String', 'API_KEY', DEVELOPMENT_KEY
-        }
-
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
-            buildConfigField 'String', 'API_KEY', PRODUCTION_KEY
         }
     }
 
@@ -36,6 +31,14 @@ android {
         dev {
             dimension "version"
             applicationIdSuffix ".dev"
+
+            buildConfigField 'String', 'API_KEY', DEVELOPMENT_KEY
+        }
+
+        prod {
+            dimension "version"
+
+            buildConfigField 'String', 'API_KEY', PRODUCTION_KEY
         }
     }
 
