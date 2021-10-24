@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: cek labels
-        run: echo "${{ github.event.pull_request.labels }}[*]"
+        run: echo "${{ github.event.pull_request.labels[*] }}"
       - name: set up JDK 11
         uses: actions/setup-java@v2
         with:
