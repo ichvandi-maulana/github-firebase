@@ -3,70 +3,130 @@ name: Android CI
 on:
   push:
     branches: [ main ]
+
   pull_request:
     branches: [ main ]
 
+env:
+  SIGNING_STORE_FILE: ${{ secrets.SIGNING_STORE_FILE }}
+  SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+  SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+  SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+
 jobs:
+  setup:
+    name: Setting up variables
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          # for pull_request so we can do HEAD^2
+          fetch-depth: 2
+      - name: Get commit message
+        id: get_commit_message
+        run: |
+          if   [[ '${{ github.event_name }}' == 'push' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD)
+          elif [[ '${{ github.event_name }}' == 'pull_request' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD^2)
+          fi
+    outputs:
+      commit_message: "${{ steps.get_commit_message.outputs.commit_message }}"
+
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
+    needs: [ setup ]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Running unit tests
-      run: ./gradlew test --stacktrace
-  
-  build:
-    name: Build app
-    runs-on: ubuntu-latest
+      - uses: actions/checkout@v2
+      - name: set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > release-keystore.jks.asc
+          gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
+      - name: Running unit tests
+        run: ./gradlew testDevDebugUnitTest --stacktrace
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
-
-  apk:
+  distribute:
     name: Generate and Distribute APK
     runs-on: ubuntu-latest
+    needs: [ test ]
+    if: "!contains(github.event.pull_request.labels.*.name, 'release')"
 
     steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Generate apk debug
-      run: ./gradlew assembleDebug --stacktrace
-    - name: Upload APK to artifact
-      uses: actions/upload-artifact@v2.2.4
-      with:
-        name: my-app-debug
-        path: app/build/outputs/apk/dev/debug/app-dev-debug.apk
-    - name: Distribute APK to Firebase App Distribution
-      uses: wzieba/Firebase-Distribution-Github-Action@v1.3.2
-      with:
-        appId: ${{secrets.FIREBASE_APP_ID}}
-        token: ${{secrets.FIREBASE_TOKEN}}
-        groups: group-dev
-        file: app/build/outputs/apk/dev/debug/app-dev-debug.apk
-      
+      - uses: actions/checkout@v2
+      - name: set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > release-keystore.jks.asc
+          gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
+      - name: Generate apk debug for dev and prod environment
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Upload APK to artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: APK debug dev and prod
+          path: app/build/outputs/apk/**/*-debug.apk
+      - name: Distribute APK dev to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.3.2
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID_DEV}}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: group-dev
+          file: app/build/outputs/apk/dev/debug/app-dev-debug.apk
+      - name: Distribute APK prod to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.3.2
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID_PROD}}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: group-prod
+          file: app/build/outputs/apk/prod/debug/app-prod-debug.apk
+
+  release:
+    name: Release Signed APK
+    runs-on: ubuntu-latest
+    needs: [ test, setup ]
+    if: contains(github.event.pull_request.labels.*.name, 'release')
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > release-keystore.jks.asc
+          gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
+      - name: Generate apk release for dev and prod environment
+        run: ./gradlew assembleRelease --stacktrace
+      - name: Release APK to Github
+        uses: softprops/action-gh-release@v0.1.13
+        with:
+          body: |
+            ${{ github.event.pull_request.title }}
+            ${{ github.event.pull_request.body }}
+          tag_name: ${{ needs.setup.outputs.commit_message }}
+          files: |
+            app/build/outputs/apk/dev/release/app-dev-release.apk
+            app/build/outputs/apk/prod/release/app-prod-release.apk
