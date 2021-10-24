@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 env:
-  SIGNING_STORE_FILE: app/${{ secrets.SIGNING_STORE_FILE }}
+  SIGNING_STORE_FILE: ${{ secrets.SIGNING_STORE_FILE }}
   SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
   SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
   SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
