@@ -103,7 +103,7 @@ jobs:
         uses: softprops/action-gh-release@v0.1.13
         with:
           body: ${{ github.event.pull_request.title }}
-          tag: ${{ github.event.head_commit.message }}
+          tag_name: ${{ github.event.head_commit.message }}
           files: |
             app/build/outputs/apk/dev/release/app-dev-release.apk
             app/build/outputs/apk/prod/release/app-prod-release.apk
