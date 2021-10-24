@@ -1,2 +1,2 @@
 # github-firebase
-Tes
+Test release v0.0.1
