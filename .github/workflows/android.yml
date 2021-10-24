@@ -14,9 +14,21 @@ env:
   SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
 
 jobs:
+  check:
+    name: Checking variables
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: ECHOING
+        run: |
+          echo "${{ github.body }}"
+          echo "${{ github.event.push.head_commit.message }}"
+
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
+    if: ${{ 1 == 2 }}
 
     steps:
       - uses: actions/checkout@v2
