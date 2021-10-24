@@ -22,8 +22,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: ECHOING
         run: |
-          echo "${{ github.body }}"
-          echo "${{ github.event.push.head_commit.message }}"
+          echo "${{ github.event }}"
+          echo "${{ github.event.pull_request.body }}"
 
   test:
     name: Run Unit Tests
