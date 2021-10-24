@@ -9,6 +9,12 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  SIGNING_STORE_FILE: app/${{ secrets.SIGNING_STORE_FILE }}
+  SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+  SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+  SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+
 jobs:
   test:
     name: Run Unit Tests
@@ -91,14 +97,7 @@ jobs:
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE }}" > release-keystore.jks.asc
           gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
-      - name: TREE DIR
-        run: tree app
       - name: Generate apk release for dev and prod environment
-        env:
-          SIGNING_STORE_FILE: app/${{ secrets.SIGNING_STORE_FILE }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
       - name: Release APK to Github
         uses: softprops/action-gh-release@v0.1.13
