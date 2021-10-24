@@ -19,7 +19,7 @@ jobs:
       - name: Decode keystore
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE }}" > release-keystore.jks.asc
-          gpg -d --pasphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
+          gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release-keystore.jks.asc > app/release-keystore.jks
 
   test:
     name: Run Unit Tests
