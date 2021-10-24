@@ -21,10 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: ECHOING
-        run: |
-          echo "${{ github.event.pull_request.head_commit.message }}"
-          echo "${{ github.event }}" > tes.txt
-          cat tes.txt
+        run: echo ${{ toJson(github) }}
 
   test:
     name: Run Unit Tests
