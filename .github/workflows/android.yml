@@ -14,19 +14,30 @@ env:
   SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
 
 jobs:
-  check:
-    name: Checking variables
+  setup:
+    name: Setting up variables
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-      - name: ECHOING
-        run: echo ${{ toJson(github) }}
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          # for pull_request so we can do HEAD^2
+          fetch-depth: 2
+      - name: Get commit message
+        id: get_commit_message
+        run: |
+          if   [[ '${{ github.event_name }}' == 'push' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD)
+          elif [[ '${{ github.event_name }}' == 'pull_request' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD^2)
+          fi
+    outputs:
+      commit_message: "${{ steps.get_commit_message.outputs.commit_message }}"
 
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    if: ${{ 1 == 2 }}
+    needs: [ setup ]
 
     steps:
       - uses: actions/checkout@v2
@@ -90,7 +101,7 @@ jobs:
   release:
     name: Release Signed APK
     runs-on: ubuntu-latest
-    needs: [ test ]
+    needs: [ test, setup ]
     if: contains(github.event.pull_request.labels.*.name, 'release')
 
     steps:
@@ -115,7 +126,7 @@ jobs:
           body: |
             ${{ github.event.pull_request.title }}
             ${{ github.event.pull_request.body }}
-          tag_name: ${{ github.event.pull_request.head_commit.message }}
+          tag_name: ${{ needs.setup.outputs.commit_message }}
           files: |
             app/build/outputs/apk/dev/release/app-dev-release.apk
             app/build/outputs/apk/prod/release/app-prod-release.apk
